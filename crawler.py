@@ -1,5 +1,6 @@
 import asyncio
 import json
+import hashlib
 from datetime import datetime
 from pathlib import Path
 from crawl4ai import (
@@ -36,8 +37,29 @@ class SimpleAICrawler:
             markdown_generator=self.md_generator
         )
 
-    async def crawl_url(self, url):
+    def _get_url_hash(self, url):
+        """Generate consistent hash for URL"""
+        return hashlib.md5(url.encode()).hexdigest()
+
+    def _get_filepath_for_url(self, url):
+        """Get filepath for URL data"""
+        filename = f"data_{self._get_url_hash(url)}.json"
+        return self.output_dir / filename
+
+    def is_url_crawled(self, url):
+        """Check if URL has already been crawled"""
+        filepath = self._get_filepath_for_url(url)
+        return filepath.exists()
+
+    async def crawl_url(self, url, force_crawl=False):
         try:
+            # Check if URL was already crawled
+            filepath = self._get_filepath_for_url(url)
+            if not force_crawl and filepath.exists():
+                print(f"URL already crawled, skipping: {url}")
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+
             async with AsyncWebCrawler(config=self.browser_config) as crawler:
                 # Add delay before each crawl
                 await asyncio.sleep(2.0)  # 2 seconds between requests
@@ -89,17 +111,20 @@ class SimpleAICrawler:
         return round(score, 2)
 
     def _save_data(self, data):
-        # Create filename from URL
-        filename = f"data_{hash(data['url'])}.json"
-        filepath = self.output_dir / filename
-        
+        filepath = self._get_filepath_for_url(data['url'])
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
-    async def crawl_multiple_urls(self, urls):
+    async def crawl_multiple_urls(self, urls, force_crawl=False):
         results = []
         for url in urls:
-            result = await self.crawl_url(url)
+            if not force_crawl and self.is_url_crawled(url):
+                print(f"Skipping already crawled URL: {url}")
+                with open(self._get_filepath_for_url(url), 'r', encoding='utf-8') as f:
+                    results.append(json.load(f))
+                continue
+                
+            result = await self.crawl_url(url, force_crawl)
             if result:
                 results.append(result)
         return results
@@ -108,7 +133,9 @@ def main():
     # Usage example
     urls = [
         "https://github.com/modelcontextprotocol/servers",
-        "https://sk.wikipedia.org/wiki/Prv%C3%A1_svetov%C3%A1_vojna"
+        "https://sk.wikipedia.org/wiki/Prv%C3%A1_svetov%C3%A1_vojna",
+        "https://sk.wikipedia.org/wiki/Druh%C3%A1_svetov%C3%A1_vojna",
+        "https://sportnet.sme.sk/futbalnet/z/obfz-presov/s/5052/"
     ]
     
     crawler = SimpleAICrawler(output_dir="ai_training_data")
@@ -117,6 +144,9 @@ def main():
     results = asyncio.run(crawler.crawl_multiple_urls(urls))
     
     print(f"\nCrawling completed. Processed URLs: {len(results)}")
+    print("Summary:")
+    print(f"- New URLs crawled: {len([r for r in results if r.get('timestamp') == datetime.now().strftime('%Y-%m-%d')])}") 
+    print(f"- Cached URLs used: {len([r for r in results if r.get('timestamp') != datetime.now().strftime('%Y-%m-%d')])}")
     print(f"Data has been saved to: {crawler.output_dir}")
 
 if __name__ == "__main__":
