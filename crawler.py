@@ -108,7 +108,8 @@ def main():
     # Usage example
     urls = [
         "https://github.com/modelcontextprotocol/servers",
-        "https://sk.wikipedia.org/wiki/Prv%C3%A1_svetov%C3%A1_vojna"
+        "https://sk.wikipedia.org/wiki/Prv%C3%A1_svetov%C3%A1_vojna",
+        "https://sk.wikipedia.org/wiki/Druh%C3%A1_svetov%C3%A1_vojna"
     ]
     
     crawler = SimpleAICrawler(output_dir="ai_training_data")
