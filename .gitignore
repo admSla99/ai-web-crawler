@@ -1,0 +1,15 @@
+# Python virtual environment
+venv/
+__pycache__/
+*.pyc
+
+# Training data
+ai_training_data/
+
+# IDE files
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.* 
