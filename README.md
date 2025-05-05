@@ -119,6 +119,8 @@ The GitHub Actions workflow:
 - Sends the collected data to your n8n webhook
 - Uploads the crawled data as a GitHub Actions artifact
 
+Note: The workflow uses the latest versions of GitHub Actions (checkout@v4, setup-python@v5, upload-artifact@v4)
+
 You can also manually trigger the workflow from the Actions tab in your GitHub repository.
 
 ### Webhook Data Format
