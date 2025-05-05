@@ -1,8 +1,10 @@
 import asyncio
 import json
 import hashlib
+import re
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from crawl4ai import (
     AsyncWebCrawler,
@@ -70,6 +72,24 @@ class SimpleAICrawler:
             excluded_tags=['form', 'header', 'footer', 'nav']
         )
 
+    def _extract_unique_id_from_url(self, url):
+        """Extract a unique identifier from the URL based on the last path segment"""
+        # Parse the URL
+        parsed_url = urlparse(url)
+
+        # Get the path and remove trailing slash if present
+        path = parsed_url.path.rstrip('/')
+
+        # Split the path by '/' and get the last non-empty segment
+        path_segments = [segment for segment in path.split('/') if segment]
+
+        if path_segments:
+            # Return the last segment as the unique ID
+            return path_segments[-1]
+        else:
+            # Fallback to a hash of the URL if no path segments are found
+            return hashlib.md5(url.encode()).hexdigest()[:8]
+
     def _get_url_hash(self, url):
         """Generate consistent hash for URL"""
         return hashlib.md5(url.encode()).hexdigest()
@@ -91,7 +111,14 @@ class SimpleAICrawler:
             if not force_crawl and filepath.exists():
                 print(f"URL already crawled, skipping: {url}")
                 with open(filepath, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+                    data = json.load(f)
+                    # Ensure the ID field exists in older data
+                    if 'id' not in data:
+                        data['id'] = self._extract_unique_id_from_url(url)
+                        # Save the updated data
+                        with open(filepath, 'w', encoding='utf-8') as f_write:
+                            json.dump(data, f_write, ensure_ascii=False, indent=2)
+                    return data
 
             async with AsyncWebCrawler(config=self.browser_config) as crawler:
                 # Add delay before each crawl
@@ -121,8 +148,12 @@ class SimpleAICrawler:
 
                 print(f"Removed 'Správy z Futbalnetu' section from final markdown")
 
+                # Extract unique ID from URL
+                unique_id = self._extract_unique_id_from_url(url)
+
                 # Prepare data for AI
                 data = {
+                    "id": unique_id,  # Add unique ID based on the last part of the URL
                     "url": url,
                     "timestamp": datetime.now().isoformat(),
                     "content": {
@@ -176,8 +207,16 @@ class SimpleAICrawler:
         for url in urls:
             if not force_crawl and self.is_url_crawled(url):
                 print(f"Skipping already crawled URL: {url}")
-                with open(self._get_filepath_for_url(url), 'r', encoding='utf-8') as f:
-                    results.append(json.load(f))
+                filepath = self._get_filepath_for_url(url)
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    # Ensure the ID field exists in older data
+                    if 'id' not in data:
+                        data['id'] = self._extract_unique_id_from_url(url)
+                        # Save the updated data
+                        with open(filepath, 'w', encoding='utf-8') as f_write:
+                            json.dump(data, f_write, ensure_ascii=False, indent=2)
+                    results.append(data)
                 continue
 
             result = await self.crawl_url(url, force_crawl)
@@ -202,6 +241,7 @@ def main():
     if results and len(results) > 0:
         print("\nCrawling results:")
         for result in results:
+            print(f"ID: {result['id']}")
             print(f"URL: {result['url']}")
             print(f"Content length: {result['metadata']['length']} characters")
             print(f"Quality score: {result['metadata']['quality_score']}")
