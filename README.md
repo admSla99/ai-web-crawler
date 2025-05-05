@@ -100,6 +100,55 @@ The crawler saves data in JSON format with the following structure:
 }
 ```
 
+## Automated Workflow
+
+This project includes a GitHub Actions workflow that automatically runs the crawler on a weekly schedule and sends the data to an n8n webhook.
+
+### Setup
+
+1. In your GitHub repository, go to Settings > Secrets and Variables > Actions
+2. Add a new repository secret named `N8N_WEBHOOK_URL` with your n8n webhook URL
+3. The workflow will run automatically every Sunday at 23:59 UTC
+
+### Workflow Details
+
+The GitHub Actions workflow:
+- Runs on a weekly schedule (Sunday at 23:59 UTC)
+- Installs all required dependencies
+- Runs the crawler script
+- Sends the collected data to your n8n webhook
+- Uploads the crawled data as a GitHub Actions artifact
+
+You can also manually trigger the workflow from the Actions tab in your GitHub repository.
+
+### Webhook Data Format
+
+The data sent to the n8n webhook has the following structure:
+
+```json
+{
+  "data": [
+    {
+      "url": "crawled_url_1",
+      "timestamp": "ISO-8601 timestamp",
+      "content": {
+        "raw_markdown": "original markdown",
+        "filtered_markdown": "filtered content"
+      },
+      "metadata": {
+        "length": "content length",
+        "quality_score": "calculated quality score"
+      }
+    },
+    // Additional crawled pages...
+  ],
+  "metadata": {
+    "total_files": 2,
+    "total_items": 2
+  }
+}
+```
+
 ## License
 
 MIT
