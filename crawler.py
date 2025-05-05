@@ -237,20 +237,6 @@ def main():
     # Force a fresh crawl to test our changes
     results = asyncio.run(crawler.crawl_multiple_urls(urls, force_crawl=True))
 
-    # Print a summary of the results
-    if results and len(results) > 0:
-        print("\nCrawling results:")
-        for result in results:
-            print(f"ID: {result['id']}")
-            print(f"URL: {result['url']}")
-            print(f"Content length: {result['metadata']['length']} characters")
-            print(f"Quality score: {result['metadata']['quality_score']}")
-
-            # Print a sample of the filtered content
-            filtered_content = result['content']['filtered_markdown']
-            sample_length = min(200, len(filtered_content))
-            print(f"Sample of filtered content: {filtered_content[:sample_length]}...")
-
     print(f"\nCrawling completed. Processed URLs: {len(results)}")
     print("Summary:")
     print(f"- New URLs crawled: {len([r for r in results if r.get('timestamp') == datetime.now().strftime('%Y-%m-%d')])}")
