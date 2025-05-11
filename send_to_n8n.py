@@ -14,7 +14,7 @@ import sys
 
 def main():
     # Get the webhook URL from environment variable
-    webhook_url = os.environ.get('N8N_WEBHOOK_URL')
+    webhook_url = os.environ.get('N8N_WEBHOOK_URL', 'http://localhost:5678/webhook-test/86260a05-9971-4baa-a4af-f9b1e60894ee')
 
     if not webhook_url:
         print("Error: N8N_WEBHOOK_URL environment variable is not set.")
