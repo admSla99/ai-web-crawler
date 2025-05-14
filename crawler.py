@@ -24,7 +24,6 @@ class CustomContentFilter(PruningContentFilter):
     def filter_content(self, html_content):
         """Pre-process HTML to remove unwanted sections before applying standard filtering"""
         soup = BeautifulSoup(html_content, 'html.parser')
-
         print("Starting custom content filtering...")
 
         # Find and remove the "Správy z Futbalnetu" section
@@ -228,10 +227,12 @@ def main():
     # Usage example
     urls = [
         "https://sportnet.sme.sk/futbalnet/k/fk-fc-raznany/tim/dospeli-m-a/program/",
-        "https://sportnet.sme.sk/futbalnet/z/obfz-presov/s/8-liga-dospeli-obfz-presov/tabulky/"
+        "https://sportnet.sme.sk/futbalnet/z/obfz-presov/s/8-liga-dospeli-obfz-presov/tabulky/",
+        "https://sportnet.sme.sk/futbalnet/z/obfz-presov/s/8-liga-dospeli-obfz-presov/statistiky/",
+        "https://sportnet.sme.sk/futbalnet/z/obfz-presov/s/8-liga-dospeli-obfz-presov/timy/"
     ]
 
-    crawler = SimpleAICrawler(output_dir="ai_training_data")
+    crawler = SimpleAICrawler(output_dir="crawled_data")
 
     print("Starting crawling...")
     # Force a fresh crawl to test our changes

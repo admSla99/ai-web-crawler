@@ -22,7 +22,7 @@ def main():
         sys.exit(1)
 
     # Get the data directory from command line argument or use default
-    data_dir = sys.argv[1] if len(sys.argv) > 1 else "ai_training_data"
+    data_dir = sys.argv[1] if len(sys.argv) > 1 else "crawled_data"
     data_path = Path(data_dir)
 
     if not data_path.exists() or not data_path.is_dir():
